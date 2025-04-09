@@ -7,19 +7,40 @@ import torch.nn.functional as F
 from newsreclib.models.components.layers.attention import AdditiveAttention
 
 class CustomNewsEncoder(nn.Module):
-    def __init__(self, embed_dim, custom_embeddings):
+    def __init__(self, embed_dim, custom_embeddings_path):
         super().__init__()
         self.embed_dim = embed_dim
         # Create embedding layer from your custom embeddings
         self.embedding = nn.Embedding.from_pretrained(
-            torch.FloatTensor(custom_embeddings),
+            self._load_custom_embeddings(custom_embeddings_path),
+            #torch.FloatTensor(custom_embeddings),
             freeze=False  # Set to True if you don't want embeddings to be updated
         )
-    
-    def forward(self, news_batch):
-        # news_batch should contain news IDs that map to your embeddings
-        news_ids = news_batch['news_ids']  # Assuming you've added news_ids to your batch
-        return self.embedding(news_ids)
+
+    def _load_custom_embeddings(self, path: str) -> torch.Tensor:
+        """Loads and validates custom embeddings."""
+        embeddings_dict = np.load(path, allow_pickle=True).item()
+        
+        # Create embedding matrix with padding index 0
+        num_embeddings = len(embeddings_dict) + 1  # +1 for padding
+        embedding_matrix = torch.zeros((num_embeddings, self.embed_dim))
+        
+        # Create mapping from news IDs to indices
+        self.news_id_to_idx = {nid: idx+1 for idx, nid in enumerate(embeddings_dict.keys())}
+        
+        # Fill embedding matrix
+        for nid, emb in embeddings_dict.items():
+            embedding_matrix[self.news_id_to_idx[nid]] = torch.tensor(emb)
+            
+        return embedding_matrix
+
+    def forward(self, x: Dict[str, torch.Tensor]) -> torch.Tensor:
+        """Returns embeddings for input news IDs."""
+        news_ids = x["news_ids"]  # Shape: [batch_size]
+        indices = torch.tensor([self.news_id_to_idx.get(nid, 0) for nid in news_ids], 
+                              device=news_ids.device)
+        return self.embeddings(indices)
+
 
 class NewsEncoder(nn.Module):
     """Implements a news encoder.

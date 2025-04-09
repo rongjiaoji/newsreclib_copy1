@@ -100,6 +100,7 @@ class NRMSModule(AbstractRecommneder):
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
         use_custom_embeddings: bool = False,  # Add this parameter
+        custom_embeddings_path: Optional[str],
     ) -> None:
         super().__init__(
             outputs=outputs,
@@ -128,7 +129,7 @@ class NRMSModule(AbstractRecommneder):
             self.news_encoder = CustomNewsEncoder(
                 embed_dim=self.hparams.embed_dim,
                 #custom_embeddings=pretrained_embeddings  # Your loaded embeddings
-                custom_embeddings_path=self.hparams.pretrained_embeddings_path
+                custom_embeddings_path=self.hparams.custom_embeddings_path,
             )
         elif not self.hparams.use_plm:
             # pretrained embeddings + contextualization
