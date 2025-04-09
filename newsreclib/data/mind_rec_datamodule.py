@@ -136,9 +136,14 @@ class MINDRecDataModule(LightningDataModule):
         num_workers: int,
         pin_memory: bool,
         drop_last: bool,
+        use_custom_embeddings: bool = False,
+        custom_embeddings_path: Optional[str] = None,
+        use_sentiment_annotation: bool = True,
     ) -> None:
         super().__init__()
+        self.use_custom_embeddings = use_custom_embeddings
         self.custom_embeddings_path = custom_embeddings_path
+        self.use_sentiment_annotation = use_sentiment_annotation
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)

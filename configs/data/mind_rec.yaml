@@ -10,7 +10,7 @@ dataset_url:
   small:
     train: "https://recodatasets.z20.web.core.windows.net/newsrec/MINDsmall_train.zip"
     dev: "https://recodatasets.z20.web.core.windows.net/newsrec/MINDsmall_dev.zip"
-pretrained_embeddings_url: "https://nlp.stanford.edu/data/glove.840B.300d.zip"
+# pretrained_embeddings_url: "https://nlp.stanford.edu/data/glove.840B.300d.zip"
 
 custom_embeddings_path: ${paths.data_dir}/custom_embeddings.npy
 
@@ -49,7 +49,10 @@ entity_embed_dim: 100
 entity_freq_threshold: 2
 entity_conf_threshold: 0.5
 
+use_custom_embeddings: True
+
 sentiment_annotator: null
+use_sentiment_annotation: False
 
 valid_time_split: "2019-11-14 00:00:00" # interactions with timestamp before this data will be used for training
 
