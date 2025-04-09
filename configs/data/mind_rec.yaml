@@ -8,9 +8,11 @@ dataset_url:
     train: "https://mind201910small.blob.core.windows.net/release/MINDlarge_train.zip"
     dev: "https://mind201910small.blob.core.windows.net/release/MINDlarge_dev.zip"
   small:
-    train: "https://mind201910small.blob.core.windows.net/release/MINDsmall_train.zip"
-    dev: "https://mind201910small.blob.core.windows.net/release/MINDsmall_dev.zip"
+    train: "https://recodatasets.z20.web.core.windows.net/newsrec/MINDsmall_train.zip"
+    dev: "https://recodatasets.z20.web.core.windows.net/newsrec/MINDsmall_dev.zip"
 pretrained_embeddings_url: "https://nlp.stanford.edu/data/glove.840B.300d.zip"
+
+custom_embeddings_path: ${paths.data_dir}/custom_embeddings.npy
 
 # File names and paths
 data_dir: ${paths.data_dir}

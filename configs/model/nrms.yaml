@@ -13,7 +13,7 @@ attributes2encode: ["title"]
 use_plm: False
 
 # text encoder
-pretrained_embeddings_path: null
+pretrained_embeddings_path: "${data.custom_embeddings_path}"
 plm_model: null
 frozen_layers: null
 embed_dim: 300
