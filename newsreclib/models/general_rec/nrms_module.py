@@ -1,5 +1,7 @@
 from typing import Dict, List, Optional, Tuple
 
+from newsreclib.models.components.encoders.news.custom_news_encoder import CustomNewsEncoder
+
 import torch
 from torch_geometric.utils import to_dense_batch
 from torchmetrics import MetricCollection
@@ -122,39 +124,39 @@ class NRMSModule(AbstractRecommneder):
 
         if self.hparams.use_custom_embeddings:
             # Initialize custom news encoder
+            # Custom embedding logic - bypass all text processing
             self.news_encoder = CustomNewsEncoder(
                 embed_dim=self.hparams.embed_dim,
-                custom_embeddings=pretrained_embeddings  # Your loaded embeddings
+                #custom_embeddings=pretrained_embeddings  # Your loaded embeddings
+                custom_embeddings_path=self.hparams.pretrained_embeddings_path
+            )
+        elif not self.hparams.use_plm:
+            # pretrained embeddings + contextualization
+            assert isinstance(self.hparams.pretrained_embeddings_path, str)
+            pretrained_embeddings = self._init_embedding(
+                filepath=self.hparams.pretrained_embeddings_path
+            )
+            text_encoder = MHSAAddAtt(
+                pretrained_embeddings=pretrained_embeddings,
+                embed_dim=self.hparams.embed_dim,
+                num_heads=self.hparams.num_heads,
+                query_dim=self.hparams.query_dim,
+                dropout_probability=self.hparams.dropout_probability,
             )
         else:
-            # initialize text encoder
-            if not self.hparams.use_plm:
-                # pretrained embeddings + contextualization
-                assert isinstance(self.hparams.pretrained_embeddings_path, str)
-                pretrained_embeddings = self._init_embedding(
-                    filepath=self.hparams.pretrained_embeddings_path
-                )
-                text_encoder = MHSAAddAtt(
-                    pretrained_embeddings=pretrained_embeddings,
-                    embed_dim=self.hparams.embed_dim,
-                    num_heads=self.hparams.num_heads,
-                    query_dim=self.hparams.query_dim,
-                    dropout_probability=self.hparams.dropout_probability,
-                )
-            else:
-                # use PLM
-                assert isinstance(self.hparams.plm_model, str)
-                text_encoder = PLM(
-                    plm_model=self.hparams.plm_model,
-                    frozen_layers=self.hparams.frozen_layers,
-                    embed_dim=self.hparams.embed_dim,
-                    use_mhsa=True,
-                    apply_reduce_dim=False,
-                    reduced_embed_dim=None,
-                    num_heads=self.hparams.num_heads,
-                    query_dim=self.hparams.query_dim,
-                    dropout_probability=self.hparams.dropout_probability,
-                )
+            # use PLM
+            assert isinstance(self.hparams.plm_model, str)
+            text_encoder = PLM(
+                plm_model=self.hparams.plm_model,
+                frozen_layers=self.hparams.frozen_layers,
+                embed_dim=self.hparams.embed_dim,
+                use_mhsa=True,
+                apply_reduce_dim=False,
+                reduced_embed_dim=None,
+                num_heads=self.hparams.num_heads,
+                query_dim=self.hparams.query_dim,
+                dropout_probability=self.hparams.dropout_probability,
+            )
 
         # initialize news encoder
         self.news_encoder = NewsEncoder(
