@@ -122,7 +122,7 @@ class MINDRecDataModule(LightningDataModule):
         entity_freq_threshold: int = 2,
         entity_conf_threshold: float = 0.5,
         sentiment_annotator: Optional[nn.Module] = None,
-        use_sentiment_annotation: bool = True,
+        use_sentiment_annotation: bool = False,
         valid_time_split: str = "2019-11-14 00:00:00",
         max_title_len: int = 30,
         max_abstract_len: int = 50,
