@@ -11,8 +11,8 @@ dataset_url:
     train: "https://recodatasets.z20.web.core.windows.net/newsrec/MINDsmall_train.zip"
     dev: "https://recodatasets.z20.web.core.windows.net/newsrec/MINDsmall_dev.zip"
 
-
-custom_embeddings_path: "newsreclib_copy1/newsreclib/data/custom_embeddings.npy"
+data:
+  custom_embeddings_path: "newsreclib_copy1/newsreclib/data/custom_embeddings.npy"
 
 #pretrained_embeddings_url: "https://nlp.stanford.edu/data/glove.840B.300d.zip"
 pretrained_embeddings_url: null  # Change from URL to null
