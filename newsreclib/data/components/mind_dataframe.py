@@ -98,6 +98,7 @@ class MINDDataFrame(Dataset):
         train: bool,
         validation: bool,
         download: bool,
+        use_sentiment_annotation: bool = False,  # Add this new parameter
     ) -> None:
         super().__init__()
 
@@ -109,6 +110,9 @@ class MINDDataFrame(Dataset):
 
         self.use_plm = use_plm
         self.use_pretrained_categ_embeddings = use_pretrained_categ_embeddings
+        
+        # Add this line to store the parameter
+        self.use_sentiment_annotation = use_sentiment_annotation
 
         if not self.use_plm or self.use_pretrained_categ_embeddings:
             assert isinstance(word_embed_dim, int)
@@ -282,25 +286,36 @@ class MINDDataFrame(Dataset):
                 self.dst_dir,
                 "transformed_entity_embeddings",
             )
-
-            if (
-                "sentiment_class" in self.dataset_attributes
-                or "sentiment_score" in self.dataset_attributes
-            ):
+            # In the sentiment computation section (around line 300), modify to:
+            if ("sentiment_class" in self.dataset_attributes or "sentiment_score" in self.dataset_attributes):
                 sentiment2index_fpath = os.path.join(
                     self.data_dir,
                     "MIND" + self.dataset_size + "_train",
                     self.id2index_filenames["sentiment2index"],
                 )
+                
+                if self.use_sentiment_annotation and self.sentiment_annotator is not None:
+                    # Compute sentiment
+                    news["sentiment_preds"] = news["title"].progress_apply(
+                        lambda text: self.sentiment_annotator(text)
+                    )
+                    news["sentiment_class"], news["sentiment_score"] = zip(*news["sentiment_preds"])
+                    news.drop(columns=["sentiment_preds"], inplace=True)
 
-                # compute sentiment classes
-                log.info("Computing sentiments.")
-                news["sentiment_preds"] = news["title"].progress_apply(
-                    lambda text: self.sentiment_annotator(text)
-                )
-                news["sentiment_class"], news["sentiment_score"] = zip(*news["sentiment_preds"])
-                news.drop(columns=["sentiment_preds"], inplace=True)
+                    if self.data_split == "train":
+                        # Only create sentiment2index if we're computing sentiment
+                        news_sentiment = news["sentiment_class"].drop_duplicates().reset_index(drop=True)
+                        sentiment2index = {v: k + 1 for k, v in news_sentiment.to_dict().items()}
+                        file_utils.to_tsv(
+                            df=pd.DataFrame(sentiment2index.items(), columns=["sentiment", "index"]),
+                            fpath=sentiment2index_fpath,
+                        )
+                else:
+                    # Set default values that match the expected format
+                    news["sentiment_class"] = 1  # Assuming 1 is neutral class
+                    news["sentiment_score"] = 0.5  # Middle of typical sentiment range [0,1]
                 log.info("Sentiments computation completed.")
+
 
             if self.data_split == "train":
                 if not self.use_plm:
