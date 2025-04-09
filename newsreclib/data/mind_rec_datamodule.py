@@ -110,48 +110,50 @@ class MINDRecDataModule(LightningDataModule):
         data_dir: str,
         dataset_attributes: List,
         id2index_filenames: Dict,
-        pretrained_embeddings_url: str,
-        custom_embeddings_path: str,  # Add this parameter
-        word_embeddings_dirname: Optional[str],
-        word_embeddings_fpath: Optional[str],
-        entity_embeddings_filename: str,
-        use_plm: bool,
-        use_pretrained_categ_embeddings: bool,
-        categ_embed_dim: Optional[int],
-        word_embed_dim: Optional[int],
-        entity_embed_dim: int,
-        entity_freq_threshold: int,
-        entity_conf_threshold: float,
-        sentiment_annotator: nn.Module,
-        valid_time_split: str,
-        max_title_len: int,
-        max_abstract_len: int,
-        concatenate_inputs: bool,
-        tokenizer_name: Optional[str],
-        tokenizer_use_fast: Optional[bool],
-        tokenizer_max_len: Optional[int],
-        max_history_len: int,
-        neg_sampling_ratio: float,
-        batch_size: int,
-        num_workers: int,
-        pin_memory: bool,
-        drop_last: bool,
-        use_custom_embeddings: bool = False,
-        custom_embeddings_path: Optional[str] = None,
+        pretrained_embeddings_url: Optional[str] = None,  # Make optional
+        word_embeddings_dirname: Optional[str] = None,
+        word_embeddings_fpath: Optional[str] = None,
+        entity_embeddings_filename: str = "entity_embedding.vec",
+        use_plm: bool = False,
+        use_pretrained_categ_embeddings: bool = True,
+        word_embed_dim: Optional[int] = None,
+        categ_embed_dim: Optional[int] = None,
+        entity_embed_dim: int = 100,
+        entity_freq_threshold: int = 2,
+        entity_conf_threshold: float = 0.5,
+        sentiment_annotator: Optional[nn.Module] = None,
         use_sentiment_annotation: bool = True,
+        valid_time_split: str = "2019-11-14 00:00:00",
+        max_title_len: int = 30,
+        max_abstract_len: int = 50,
+        concatenate_inputs: bool = False,
+        tokenizer_name: Optional[str] = None,
+        tokenizer_use_fast: Optional[bool] = None,
+        tokenizer_max_len: Optional[int] = None,
+        max_history_len: int = 50,
+        neg_sampling_ratio: float = 4,
+        batch_size: int = 64,
+        num_workers: int = 0,
+        pin_memory: bool = True,
+        drop_last: bool = False,
+        use_custom_embeddings: bool = False,
+        custom_embeddings_path: Optional[str] = None,  # Only define once
     ) -> None:
         super().__init__()
+        # Save all the parameters
+        self.save_hyperparameters(logger=False)
+        
+        # Initialize custom embeddings parameters
         self.use_custom_embeddings = use_custom_embeddings
         self.custom_embeddings_path = custom_embeddings_path
         self.use_sentiment_annotation = use_sentiment_annotation
-        # this line allows to access init params with 'self.hparams' attribute
-        # also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False)
-
+        
+        # Initialize dataset placeholders
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
 
+        # Initialize tokenizer if using PLM
         if self.hparams.use_plm:
             assert isinstance(self.hparams.tokenizer_name, str)
             assert isinstance(self.hparams.tokenizer_use_fast, bool)
