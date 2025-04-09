@@ -12,7 +12,7 @@ dataset_url:
     dev: "https://recodatasets.z20.web.core.windows.net/newsrec/MINDsmall_dev.zip"
 # pretrained_embeddings_url: "https://nlp.stanford.edu/data/glove.840B.300d.zip"
 
-custom_embeddings_path: ${paths.data_dir}/custom_embeddings.npy
+custom_embeddings_path: "newsreclib/data/custom_embeddings.npy"
 
 # File names and paths
 data_dir: ${paths.data_dir}
