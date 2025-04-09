@@ -6,6 +6,8 @@ from omegaconf.dictconfig import DictConfig
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer
 
+import numpy as np
+
 from newsreclib.data.components.mind_dataframe import MINDDataFrame
 from newsreclib.data.components.rec_dataset import (
     DatasetCollate,
@@ -146,6 +148,9 @@ class MINDRecDataModule(LightningDataModule):
         # Initialize custom embeddings parameters
         self.use_custom_embeddings = use_custom_embeddings
         self.custom_embeddings_path = custom_embeddings_path
+        if self.use_custom_embeddings:
+            self.custom_embeddings = np.load(self.custom_embeddings_path, allow_pickle=True).item()
+
         self.use_sentiment_annotation = use_sentiment_annotation
         
         # Initialize dataset placeholders

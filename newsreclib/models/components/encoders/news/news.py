@@ -6,6 +6,20 @@ import torch.nn.functional as F
 
 from newsreclib.models.components.layers.attention import AdditiveAttention
 
+class CustomNewsEncoder(nn.Module):
+    def __init__(self, embed_dim, custom_embeddings):
+        super().__init__()
+        self.embed_dim = embed_dim
+        # Create embedding layer from your custom embeddings
+        self.embedding = nn.Embedding.from_pretrained(
+            torch.FloatTensor(custom_embeddings),
+            freeze=False  # Set to True if you don't want embeddings to be updated
+        )
+    
+    def forward(self, news_batch):
+        # news_batch should contain news IDs that map to your embeddings
+        news_ids = news_batch['news_ids']  # Assuming you've added news_ids to your batch
+        return self.embedding(news_ids)
 
 class NewsEncoder(nn.Module):
     """Implements a news encoder.
