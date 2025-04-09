@@ -16,7 +16,7 @@ use_plm: False
 
 # text encoder
 use_custom_embeddings: True
-pretrained_embeddings_path: "${newsrelib.data.custom_embeddings_path}"
+pretrained_embeddings_path: "${newsreclib_copy1.newsrelib.data.custom_embeddings_path}"
 plm_model: null
 frozen_layers: null
 embed_dim: 300
