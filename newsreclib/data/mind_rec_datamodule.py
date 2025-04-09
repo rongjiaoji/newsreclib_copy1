@@ -106,11 +106,12 @@ class MINDRecDataModule(LightningDataModule):
     def __init__(
         self,
         dataset_size: str,
-        dataset_url: DictConfig,
+        dataset_url: Dict,
         data_dir: str,
-        dataset_attributes: List[str],
-        id2index_filenames: DictConfig,
-        pretrained_embeddings_url: Optional[str],
+        dataset_attributes: List,
+        id2index_filenames: Dict,
+        pretrained_embeddings_url: str,
+        custom_embeddings_path: str,  # Add this parameter
         word_embeddings_dirname: Optional[str],
         word_embeddings_fpath: Optional[str],
         entity_embeddings_filename: str,
@@ -137,7 +138,7 @@ class MINDRecDataModule(LightningDataModule):
         drop_last: bool,
     ) -> None:
         super().__init__()
-
+        self.custom_embeddings_path = custom_embeddings_path
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
