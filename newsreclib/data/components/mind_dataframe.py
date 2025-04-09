@@ -99,6 +99,7 @@ class MINDDataFrame(Dataset):
         validation: bool,
         download: bool,
         use_sentiment_annotation: bool = False,  # Add this new parameter
+        use_custom_embeddings: bool = False,  # Add this parameter
     ) -> None:
         super().__init__()
 
@@ -113,14 +114,17 @@ class MINDDataFrame(Dataset):
         
         # Add this line to store the parameter
         self.use_sentiment_annotation = use_sentiment_annotation
+        self.use_custom_embeddings = use_custom_embeddings  # Store the parameter
 
-        if not self.use_plm or self.use_pretrained_categ_embeddings:
+        # Only require word embedding parameters if not using custom embeddings
+        if not self.use_custom_embeddings and (not self.use_plm or self.use_pretrained_categ_embeddings):
             assert isinstance(word_embed_dim, int)
             self.word_embed_dim = word_embed_dim
 
-        if self.use_pretrained_categ_embeddings:
+        if self.use_pretrained_categ_embeddings and not self.use_custom_embeddings:
             assert isinstance(categ_embed_dim, int)
             self.categ_embed_dim = categ_embed_dim
+
 
         self.entity_embed_dim = entity_embed_dim
         self.entity_freq_threshold = entity_freq_threshold
@@ -152,20 +156,24 @@ class MINDDataFrame(Dataset):
                 clean_archive=False,
             )
 
-            if not self.use_plm or self.use_pretrained_categ_embeddings:
-                assert isinstance(pretrained_embeddings_url, str)
-                assert isinstance(word_embeddings_dirname, str)
-                assert isinstance(word_embeddings_fpath, str)
-                data_utils.download_and_extract_pretrained_embeddings(
-                    data_dir=self.data_dir,
-                    url=pretrained_embeddings_url,
-                    pretrained_embeddings_fpath=word_embeddings_fpath,
-                    filename=pretrained_embeddings_url.split("/")[-1],
-                    dst_dir=os.path.join(self.data_dir, word_embeddings_dirname),
-                    clean_archive=True,
-                )
+            # Only download pretrained embeddings if not using custom embeddings
+            if not self.use_custom_embeddings and (not self.use_plm or self.use_pretrained_categ_embeddings):
+                if pretrained_embeddings_url is not None:
+                    assert isinstance(word_embeddings_dirname, str)
+                    assert isinstance(word_embeddings_fpath, str)
+                    data_utils.download_and_extract_pretrained_embeddings(
+                        data_dir=self.data_dir,
+                        url=pretrained_embeddings_url,
+                        pretrained_embeddings_fpath=word_embeddings_fpath,
+                        filename=pretrained_embeddings_url.split("/")[-1],
+                        dst_dir=os.path.join(self.data_dir, word_embeddings_dirname),
+                        clean_archive=True,
+                    )
+                else:
+                    log.info("Skipping pretrained embeddings download (URL is None)")
 
-        self.word_embeddings_fpath = word_embeddings_fpath
+
+        self.word_embeddings_fpath = word_embeddings_fpath if not self.use_custom_embeddings else None
 
         self.news, self.behaviors = self.load_data()
 
@@ -318,7 +326,7 @@ class MINDDataFrame(Dataset):
 
 
             if self.data_split == "train":
-                if not self.use_plm:
+                if not self.use_plm and not self.use_custom_embeddings:
                     # tokenize text
                     news["tokenized_title"] = news["title"].progress_apply(
                         data_utils.word_tokenize
@@ -438,7 +446,7 @@ class MINDDataFrame(Dataset):
             ):
                 log.info(f"Number of sentiment classes: {len(sentiment2index)}.")
 
-            if not self.use_plm:
+            if not self.use_plm and not self.use_custom_embeddings:
                 # construct word embeddings matrix
                 log.info("Constructing word embedding matrix.")
                 data_utils.generate_pretrained_embeddings(

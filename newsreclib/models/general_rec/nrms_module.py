@@ -97,6 +97,7 @@ class NRMSModule(AbstractRecommneder):
         recs_fpath: Optional[str],
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
+        use_custom_embeddings: bool = False,  # Add this parameter
     ) -> None:
         super().__init__(
             outputs=outputs,
