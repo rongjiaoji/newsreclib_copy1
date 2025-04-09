@@ -3,6 +3,7 @@ import os
 from ast import literal_eval
 from collections import Counter
 from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, Union
 
 import numpy as np
 import pandas as pd
@@ -177,6 +178,28 @@ class MINDDataFrame(Dataset):
 
         self.news, self.behaviors = self.load_data()
 
+        self.custom_embeddings: Dict[str, np.ndarray] = {}
+
+    def _load_custom_embeddings(self) -> Dict[str, np.ndarray]:
+        """Loads custom news-level embeddings from file."""
+        if not self.use_custom_embeddings:
+            return {}
+            
+        custom_embeddings_path = os.path.join(self.data_dir, "custom_embeddings.npy")
+        if not os.path.exists(custom_embeddings_path):
+            raise FileNotFoundError(f"Custom embeddings file not found at {custom_embeddings_path}")
+        
+        log.info(f"Loading custom embeddings from {custom_embeddings_path}")
+        embeddings_dict = np.load(custom_embeddings_path, allow_pickle=True).item()
+        
+        # Validate embeddings
+        sample_emb = next(iter(embeddings_dict.values()))
+        if sample_emb.shape[0] != self.word_embed_dim:
+            raise ValueError(
+                f"Embedding dimension mismatch. Expected {self.word_embed_dim}, got {sample_emb.shape[0]}")
+                
+        return embeddings_dict
+
     def __getitem__(self, index) -> Tuple[Any, Any, Any]:
         user_bhv = self.behaviors.iloc[index]
 
@@ -258,7 +281,14 @@ class MINDDataFrame(Dataset):
             news["title_entities"].fillna("[]", inplace=True)
             news["abstract_entities"].fillna("[]", inplace=True)
 
-            if not self.use_plm:
+            if self.use_custom_embeddings:
+                self.custom_embeddings = self._load_custom_embeddings()
+                news["custom_embedding"] = news["nid"].apply(
+                    lambda x: self.custom_embeddings.get(x, np.zeros(self.word_embed_dim)))
+                log.info(f"Loaded custom embeddings for {len(self.custom_embeddings)} news articles")
+
+
+            if not self.use_plm and not self.use_custom_embeddings:
                 word2index_fpath = os.path.join(
                     self.data_dir,
                     "MIND" + self.dataset_size + "_train",
